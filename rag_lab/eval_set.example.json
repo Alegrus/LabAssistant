@@ -1,0 +1,17 @@
+[
+  {
+    "question": "How do I reset the centrifuge after an error?",
+    "expected_doc": "rag_lab/data/centrifuge_manual.pdf",
+    "expected_page": 12
+  },
+  {
+    "question": "What does error code E04 mean?",
+    "expected_doc": "rag_lab/data/centrifuge_manual.pdf",
+    "expected_page": 33
+  },
+  {
+    "question": "What is the maximum rotor speed?",
+    "expected_doc": "rag_lab/data/centrifuge_manual.pdf",
+    "expected_page": 7
+  }
+]

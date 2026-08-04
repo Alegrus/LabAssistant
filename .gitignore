@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Env & secrets
+.env
+
+# Storage (uploaded manuals & user images — never commit)
+storage/documents/*
+storage/uploads/*
+!storage/documents/.gitkeep
+!storage/uploads/.gitkeep
+
+# Local DB / caches
+*.sqlite3
+.pytest_cache/
+.mypy_cache/
+
+# OS
+.DS_Store
+
+# rag_lab sandbox: lab manuals — never commit
+rag_lab/data/
+.Rhistory

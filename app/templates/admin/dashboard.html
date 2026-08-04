@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Admin — Lab Assistant{% endblock %}
+{% block content %}
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-bold">Admin Dashboard</h1>
+    <form method="post" action="/logout">
+      <button type="submit" class="text-sm text-gray-400 hover:text-gray-600 underline">
+        Sign out
+      </button>
+    </form>
+  </div>
+
+  <nav class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+    <a href="/admin/documents"
+       class="block bg-white border border-gray-200 rounded-lg p-5 hover:border-blue-400 transition-colors">
+      <p class="font-semibold text-gray-800">Documents</p>
+      <p class="text-sm text-gray-500 mt-1">Upload &amp; manage the manuals the assistant searches (R6)</p>
+    </a>
+    <a href="/admin/chats"
+       class="block bg-white border border-gray-200 rounded-lg p-5 hover:border-blue-400 transition-colors">
+      <p class="font-semibold text-gray-800">Chats</p>
+      <p class="text-sm text-gray-500 mt-1">Review every conversation and who asked what (R7)</p>
+    </a>
+    <a href="/admin/access-log"
+       class="block bg-white border border-gray-200 rounded-lg p-5 hover:border-blue-400 transition-colors">
+      <p class="font-semibold text-gray-800">Access Log</p>
+      <p class="text-sm text-gray-500 mt-1">See who has accessed the lab assistant (R5)</p>
+    </a>
+    <a href="/admin/security"
+       class="block bg-white border border-gray-200 rounded-lg p-5 hover:border-blue-400 transition-colors">
+      <p class="font-semibold text-gray-800">Security</p>
+      <p class="text-sm text-gray-500 mt-1">Change user or admin passwords (R10)</p>
+    </a>
+  </nav>
+</div>
+{% endblock %}

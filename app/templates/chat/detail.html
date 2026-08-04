@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+{% block title %}{{ chat.title }} — Lab Assistant{% endblock %}
+{% block content %}
+<div class="space-y-4">
+  <div class="flex items-center gap-3">
+    <a href="/" class="text-sm text-blue-600 hover:underline">← Chats</a>
+    <h1 class="text-lg font-semibold truncate">{{ chat.title }}</h1>
+  </div>
+
+  {% if error %}
+  <div class="bg-amber-50 border border-amber-200 text-amber-800 rounded-lg px-4 py-3 text-sm">
+    {% if error == "image_type" %}
+      The attached file isn't a recognized image. Please attach a photo (JPEG, PNG, WebP, or HEIC).
+    {% elif error == "image_size" %}
+      That image is larger than {{ max_image_mb }} MB. Please attach a smaller photo.
+    {% else %}
+      The assistant is temporarily unavailable (the model was rate-limited, timed out, or is
+      unreachable). Your input was kept below — please try again.
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <div id="stream-error"
+       class="hidden bg-amber-50 border border-amber-200 text-amber-800 rounded-lg px-4 py-3 text-sm"></div>
+
+  <div class="space-y-4" id="messages">
+    {% if not messages %}
+    <div class="bg-white border border-gray-200 rounded-lg px-6 py-10 text-center text-gray-400" id="empty-hint">
+      Ask a question about a lab machine — e.g. “How do I unclog the S6 nozzle?” You can
+      also attach a photo of the machine or screen.
+    </div>
+    {% endif %}
+
+    {% for m in messages %}
+      {% if m.role == "user" %}
+      <div class="flex justify-end">
+        <div class="bg-blue-600 text-white rounded-lg rounded-br-sm px-4 py-2 max-w-[85%] whitespace-pre-wrap text-sm space-y-2">
+          {% if m.image_path %}
+          <a href="/chat/{{ chat.id }}/image/{{ m.id }}" target="_blank" rel="noopener">
+            <img src="/chat/{{ chat.id }}/image/{{ m.id }}" alt="attached photo"
+                 class="rounded max-h-48 border border-blue-400" />
+          </a>
+          {% endif %}
+          <div>{{ m.content }}</div>
+        </div>
+      </div>
+      {% else %}
+      <div class="flex justify-start">
+        <div class="bg-white border border-gray-200 rounded-lg rounded-bl-sm px-4 py-3 max-w-[85%] text-sm space-y-2">
+          {% if m.citations %}
+          <div class="flex items-start gap-1.5 text-xs text-gray-500 bg-blue-50 border border-blue-100 rounded px-2 py-1.5">
+            <span>📄</span>
+            <span>This answer is drawn from the manuals. Check the linked sources below to confirm the steps for your machine.</span>
+          </div>
+          {% endif %}
+          <div class="{% if m.not_found %}text-amber-700{% else %}text-gray-800{% endif %} whitespace-pre-wrap">{{ m.content }}</div>
+          {% if m.citations %}
+          <div class="pt-2 border-t border-gray-100">
+            <div class="text-xs font-medium text-gray-500 mb-1">Sources</div>
+            <ul class="space-y-0.5">
+              {% for c in m.citations %}
+              {% set marks = c.markers if c.markers is defined else [c.marker] %}
+              <li>
+                <a class="text-xs text-blue-600 hover:underline"
+                   href="/documents/{{ c.document_id }}/file{% if c.pages %}#page={{ c.pages[0] }}{% endif %}"
+                   target="_blank" rel="noopener">
+                  [{{ marks | join("][") }}] {{ c.filename }}{% if c.pages %} — p.{{ c.pages | join(", ") }}{% endif %}
+                </a>
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+
+  {% if pending_msg %}
+  {# Photo interpretation awaiting confirmation — the safety gate before we answer. #}
+  <div class="bg-white border border-blue-200 rounded-lg p-4 space-y-3">
+    <div class="flex items-start gap-1.5 text-xs text-gray-500">
+      <span>👁️</span>
+      <span>Here's what I see in your photo, in the context of your question. Correct it if
+        needed, then confirm — the answer will come from the manuals.</span>
+    </div>
+    <form method="post" action="/chat/{{ chat.id }}/confirm" class="space-y-3" id="confirm-form">
+      <textarea name="observations" rows="4"
+                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">{{ pending_msg.image_observations }}</textarea>
+      <div class="flex gap-2">
+        <button type="submit"
+                class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-5 py-2 rounded-lg text-sm">
+          Confirm &amp; answer
+        </button>
+        <button type="submit" form="cancel-pending" formaction="/chat/{{ chat.id }}/cancel"
+                class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-4 py-2 rounded-lg text-sm">
+          Cancel
+        </button>
+      </div>
+    </form>
+    <form id="cancel-pending" method="post" action="/chat/{{ chat.id }}/cancel"></form>
+  </div>
+  {% endif %}
+
+  {# Always rendered so JS can reveal it once a confirmed photo turn finishes streaming;
+     hidden (not omitted) while a turn awaits confirmation. #}
+  <form method="post" action="/chat/{{ chat.id }}/message" enctype="multipart/form-data"
+        class="sticky bottom-0 bg-gray-50 pt-2 space-y-2{% if pending_msg %} hidden{% endif %}"
+        id="composer">
+    <div class="flex gap-2">
+      <textarea name="content" rows="2" required
+                placeholder="Ask about a machine, error, or procedure…"
+                class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500">{{ draft }}</textarea>
+      <button type="submit" id="send-btn"
+              class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-5 rounded-lg text-sm disabled:opacity-50">
+        Send
+      </button>
+    </div>
+    <label class="flex items-center gap-2 text-xs text-gray-500">
+      <span>📷 Attach a photo (optional):</span>
+      <input type="file" name="image" accept="image/*" capture="environment"
+             class="text-xs text-gray-600" />
+    </label>
+  </form>
+</div>
+
+<script>
+(function () {
+  // Progressive enhancement: stream tokens over fetch+NDJSON so the answer appears as
+  // it's generated. If anything here is unsupported, the plain form POST still works.
+  if (!window.fetch || !window.ReadableStream) return;
+
+  const CHAT_ID = {{ chat.id }};
+  const messages = document.getElementById('messages');
+  const errorBox = document.getElementById('stream-error');
+  const composer = document.getElementById('composer');
+  const confirmForm = document.getElementById('confirm-form');
+
+  const scroll = () => window.scrollTo(0, document.body.scrollHeight);
+
+  function showError(msg) {
+    errorBox.textContent = msg;
+    errorBox.classList.remove('hidden');
+  }
+
+  function addUserBubble(text) {
+    const hint = document.getElementById('empty-hint');
+    if (hint) hint.remove();
+    const wrap = document.createElement('div');
+    wrap.className = 'flex justify-end';
+    const bubble = document.createElement('div');
+    bubble.className = 'bg-blue-600 text-white rounded-lg rounded-br-sm px-4 py-2 ' +
+                       'max-w-[85%] whitespace-pre-wrap text-sm';
+    bubble.textContent = text;              // textContent: never interpret as HTML
+    wrap.appendChild(bubble);
+    messages.appendChild(wrap);
+  }
+
+  function addAssistantBubble() {
+    const wrap = document.createElement('div');
+    wrap.className = 'flex justify-start';
+    const bubble = document.createElement('div');
+    bubble.className = 'bg-white border border-gray-200 rounded-lg rounded-bl-sm px-4 ' +
+                       'py-3 max-w-[85%] text-sm space-y-2';
+    const status = document.createElement('div');
+    status.className = 'text-xs text-gray-400 italic';
+    status.textContent = 'Working…';
+    const body = document.createElement('div');
+    body.className = 'text-gray-800 whitespace-pre-wrap';
+    bubble.appendChild(status);
+    bubble.appendChild(body);
+    wrap.appendChild(bubble);
+    messages.appendChild(wrap);
+    return { bubble, body, status };
+  }
+
+  function renderCitations(bubble, body, citations, notFound) {
+    if (notFound) {
+      body.className = 'text-amber-700 whitespace-pre-wrap';
+    }
+    if (!citations || !citations.length) return;
+
+    const note = document.createElement('div');
+    note.className = 'flex items-start gap-1.5 text-xs text-gray-500 bg-blue-50 ' +
+                     'border border-blue-100 rounded px-2 py-1.5';
+    note.innerHTML = '<span>\u{1F4C4}</span>';
+    const noteText = document.createElement('span');
+    noteText.textContent = 'This answer is drawn from the manuals. Check the linked ' +
+                           'sources below to confirm the steps for your machine.';
+    note.appendChild(noteText);
+    bubble.insertBefore(note, body);
+
+    const box = document.createElement('div');
+    box.className = 'pt-2 border-t border-gray-100';
+    const label = document.createElement('div');
+    label.className = 'text-xs font-medium text-gray-500 mb-1';
+    label.textContent = 'Sources';
+    box.appendChild(label);
+    const ul = document.createElement('ul');
+    ul.className = 'space-y-0.5';
+    citations.forEach(c => {
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.className = 'text-xs text-blue-600 hover:underline';
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.href = '/documents/' + c.document_id + '/file' +
+               (c.pages && c.pages.length ? '#page=' + c.pages[0] : '');
+      a.textContent = '[' + (c.markers || []).join('][') + '] ' + c.filename +
+                      (c.pages && c.pages.length ? ' — p.' + c.pages.join(', ') : '');
+      li.appendChild(a);
+      ul.appendChild(li);
+    });
+    box.appendChild(ul);
+    bubble.appendChild(box);
+  }
+
+  async function runStream(formData, onDone) {
+    errorBox.classList.add('hidden');
+    const { bubble, body, status } = addAssistantBubble();
+    scroll();
+    let first = true;
+    try {
+      const res = await fetch('/chat/' + CHAT_ID + '/stream', {
+        method: 'POST', body: formData
+      });
+      if (!res.ok || !res.body) throw new Error('HTTP ' + res.status);
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        let nl;
+        while ((nl = buf.indexOf('\n')) >= 0) {
+          const line = buf.slice(0, nl).trim();
+          buf = buf.slice(nl + 1);
+          if (!line) continue;
+          const evt = JSON.parse(line);
+          if (evt.type === 'status') {
+            status.textContent = evt.text;
+            scroll();
+          } else if (evt.type === 'token') {
+            if (first) { status.remove(); first = false; }
+            body.textContent += evt.text;
+            scroll();
+          } else if (evt.type === 'done') {
+            renderCitations(bubble, body, evt.citations, evt.not_found);
+            if (evt.title) {
+              const h = document.querySelector('h1');
+              if (h) h.textContent = evt.title;
+            }
+            scroll();
+          } else if (evt.type === 'error') {
+            bubble.parentElement.remove();
+            showError(evt.message);
+          }
+        }
+      }
+    } catch (err) {
+      bubble.parentElement.remove();
+      showError('Connection to the assistant was lost. Please try again.');
+    } finally {
+      if (onDone) onDone();
+    }
+  }
+
+  if (composer) {
+    composer.addEventListener('submit', function (e) {
+      // A photo needs the upload + confirmation round-trip; let the normal POST run.
+      const file = composer.querySelector('input[type=file]');
+      if (file && file.files && file.files.length) return;
+
+      const ta = composer.querySelector('textarea[name=content]');
+      const text = (ta.value || '').trim();
+      if (!text) return;
+      e.preventDefault();
+
+      const btn = document.getElementById('send-btn');
+      btn.disabled = true;
+      addUserBubble(text);
+      const fd = new FormData();
+      fd.append('content', text);
+      ta.value = '';
+      runStream(fd, () => { btn.disabled = false; ta.focus(); });
+    });
+  }
+
+  if (confirmForm) {
+    confirmForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const ta = confirmForm.querySelector('textarea[name=observations]');
+      const fd = new FormData();
+      fd.append('confirm', '1');
+      fd.append('observations', ta.value || '');
+      // Replace the confirmation panel with the streamed answer, then bring back the
+      // composer (the page was rendered in its "awaiting confirmation" state, where the
+      // composer starts hidden).
+      confirmForm.closest('div.bg-white').remove();
+      runStream(fd, () => {
+        if (composer) {
+          composer.classList.remove('hidden');
+          const ta = composer.querySelector('textarea[name=content]');
+          if (ta) ta.focus();
+        }
+      });
+    });
+  }
+})();
+</script>
+{% endblock %}

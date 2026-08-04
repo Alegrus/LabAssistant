@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Lab Assistant{% endblock %}
+{% block content %}
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold">Lab Assistant</h1>
+      <p class="text-sm text-gray-500">Hi {{ principal.display_name or "there" }} — ask about any lab machine.</p>
+    </div>
+    <form method="post" action="/logout">
+      <button type="submit" class="text-sm text-gray-400 hover:text-gray-600 underline">Sign out</button>
+    </form>
+  </div>
+
+  <form method="post" action="/chat/new">
+    <button type="submit"
+            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg text-sm">
+      + New chat
+    </button>
+  </form>
+
+  {% if chats %}
+  <div class="bg-white shadow rounded-lg divide-y divide-gray-100">
+    {% for chat in chats %}
+    <a href="/chat/{{ chat.id }}" class="block px-4 py-3 hover:bg-gray-50">
+      <div class="font-medium text-gray-800 truncate">{{ chat.title }}</div>
+      <div class="text-xs text-gray-400">
+        {{ chat.updated_at.strftime("%Y-%m-%d %H:%M") if chat.updated_at else "" }}
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="bg-white border border-gray-200 rounded-lg px-6 py-12 text-center text-gray-400">
+    No chats yet. Start one above.
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}{{ chat.title }} — Admin{% endblock %}
+{% block content %}
+<div class="space-y-4">
+  <div class="flex items-center gap-3">
+    <a href="/admin/chats" class="text-sm text-blue-600 hover:underline">← Chats</a>
+    <h1 class="text-lg font-semibold truncate">{{ chat.title }}</h1>
+  </div>
+
+  <div class="bg-white border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-600 flex flex-wrap gap-x-6 gap-y-1">
+    <span><span class="text-gray-400">User:</span> {{ user.display_name if user and user.display_name else "—" }}</span>
+    <span><span class="text-gray-400">Role:</span> {{ user.role if user else "—" }}</span>
+    <span><span class="text-gray-400">Device:</span> <span class="font-mono text-xs">{{ user.device_id if user else "—" }}</span></span>
+    <span><span class="text-gray-400">Started:</span> {{ chat.created_at.strftime("%Y-%m-%d %H:%M") if chat.created_at else "—" }}</span>
+  </div>
+
+  <div class="space-y-4">
+    {% if not messages %}
+    <div class="bg-white border border-gray-200 rounded-lg px-6 py-10 text-center text-gray-400">
+      This conversation has no messages.
+    </div>
+    {% endif %}
+
+    {% for m in messages %}
+      {% if m.role == "user" %}
+      <div class="flex justify-end">
+        <div class="bg-blue-600 text-white rounded-lg rounded-br-sm px-4 py-2 max-w-[85%] whitespace-pre-wrap text-sm space-y-2">
+          {% if m.image_path %}
+          <a href="/chat/{{ chat.id }}/image/{{ m.id }}" target="_blank" rel="noopener">
+            <img src="/chat/{{ chat.id }}/image/{{ m.id }}" alt="attached photo"
+                 class="rounded max-h-48 border border-blue-400" />
+          </a>
+          {% endif %}
+          <div>{{ m.content }}</div>
+          {% if m.image_observations %}
+          <div class="text-xs text-blue-100 border-t border-blue-400 pt-1 mt-1 whitespace-pre-wrap">
+            <span class="opacity-80">👁️ Vision read:</span> {{ m.image_observations }}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% else %}
+      <div class="flex justify-start">
+        <div class="bg-white border border-gray-200 rounded-lg rounded-bl-sm px-4 py-3 max-w-[85%] text-sm space-y-2">
+          <div class="{% if m.not_found %}text-amber-700{% else %}text-gray-800{% endif %} whitespace-pre-wrap">{{ m.content }}</div>
+          {% if m.citations %}
+          <div class="pt-2 border-t border-gray-100">
+            <div class="text-xs font-medium text-gray-500 mb-1">Sources</div>
+            <ul class="space-y-0.5">
+              {% for c in m.citations %}
+              {% set marks = c.markers if c.markers is defined else [c.marker] %}
+              <li>
+                <a class="text-xs text-blue-600 hover:underline"
+                   href="/documents/{{ c.document_id }}/file{% if c.pages %}#page={{ c.pages[0] }}{% endif %}"
+                   target="_blank" rel="noopener">
+                  [{{ marks | join("][") }}] {{ c.filename }}{% if c.pages %} — p.{{ c.pages | join(", ") }}{% endif %}
+                </a>
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

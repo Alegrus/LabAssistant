@@ -1,0 +1,37 @@
+# Web framework
+fastapi
+uvicorn[standard]
+jinja2
+python-multipart
+itsdangerous
+
+# Database
+sqlalchemy
+alembic
+psycopg[binary]
+pgvector
+
+# Config / validation
+pydantic-settings
+
+# Auth / security
+bcrypt
+python-jose[cryptography]
+slowapi
+
+# LLM / RAG
+httpx
+sentence-transformers
+pypdf
+pymupdf
+
+# Images
+pillow
+pillow-heif
+
+# Utilities
+qrcode[pil]
+
+# Dev / test
+pytest
+pytest-asyncio

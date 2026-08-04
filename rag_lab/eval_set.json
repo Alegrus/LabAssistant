@@ -1,0 +1,68 @@
+[
+  { "question": "How do I open the lid on the sheath tank to refill it?", "expected_doc": "rag_lab/data/Analyzer Sheath Tank refill.pdf", "expected_page": 1 },
+  { "question": "After refilling the sheath tank the RUN light is yellow, what should I do?", "expected_doc": "rag_lab/data/Analyzer Sheath Tank refill.pdf", "expected_page": 2 },
+  { "question": "How do I empty the waste tank?", "expected_doc": "rag_lab/data/Analyzer Sheath Tank refill.pdf", "expected_page": 3 },
+
+  { "question": "What are the signs that the nozzle is clogged?", "expected_doc": "rag_lab/data/BD S6 sorters Nozzle unclogging.pdf", "expected_page": 1 },
+  { "question": "Which way should the red o-ring face when I put the nozzle back in?", "expected_doc": "rag_lab/data/BD S6 sorters Nozzle unclogging.pdf", "expected_page": 2 },
+  { "question": "How do I actually clean the nozzle once it is removed?", "expected_doc": "rag_lab/data/BD S6 sorters Nozzle unclogging.pdf", "expected_page": 3 },
+  { "question": "After sonicating, the stream looks like one solid line instead of drops, how do I fix it?", "expected_doc": "rag_lab/data/BD S6 sorters Nozzle unclogging.pdf", "expected_page": 5 },
+
+  { "question": "How do I transfer and export my data using Cirro?", "expected_doc": "rag_lab/data/Cirro.pdf", "expected_page": 1 },
+
+  { "question": "Which cleaning solutions go into which wells on the clean plate?", "expected_doc": "rag_lab/data/Clean plate.pdf", "expected_page": 1 },
+
+  { "question": "My PerCP-Cy5.5 compensation control has no plots showing, how do I fix it?", "expected_doc": "rag_lab/data/Compensation PerCP-Cy5.5 bug.pdf", "expected_page": 1 },
+
+  { "question": "How do I create the compensation controls?", "expected_doc": "rag_lab/data/Compensation set up.pdf", "expected_page": 1 },
+  { "question": "How do I calculate the compensation after recording the controls?", "expected_doc": "rag_lab/data/Compensation set up.pdf", "expected_page": 4 },
+  { "question": "How can I check that the compensation actually worked?", "expected_doc": "rag_lab/data/Compensation set up.pdf", "expected_page": 5 },
+
+  { "question": "What is the Browser window used for in DIVA?", "expected_doc": "rag_lab/data/DIVA windows.pdf", "expected_page": 1 },
+  { "question": "DIVA opens to just a blue screen with no windows, how do I bring them back?", "expected_doc": "rag_lab/data/DIVA windows.pdf", "expected_page": 2 },
+
+  { "question": "DIVA shows Disconnected from the cytometer, how do I fix it?", "expected_doc": "rag_lab/data/Disconnection.pdf", "expected_page": 1 },
+
+  { "question": "How do I save my experiment as a template?", "expected_doc": "rag_lab/data/Diva Template.pdf", "expected_page": 1 },
+  { "question": "How do I start a new experiment from an existing template?", "expected_doc": "rag_lab/data/Diva Template.pdf", "expected_page": 2 },
+
+  { "question": "The sorter is running my sample but DIVA is frozen and I can't unload the tube, what do I do?", "expected_doc": "rag_lab/data/Emergency Sorter Stop.pdf", "expected_page": 1 },
+
+  { "question": "The screen is on but the username and password login box isn't showing up, where is it?", "expected_doc": "rag_lab/data/Find the password window.pdf", "expected_page": 1 },
+  { "question": "I came to the instrument and the screen is completely black, how do I unlock it?", "expected_doc": "rag_lab/data/Find the password window.pdf", "expected_page": 2 },
+
+  { "question": "I get a Cover error starting the plate but I don't have a lid, what now?", "expected_doc": "rag_lab/data/HTS Cover error.pdf", "expected_page": 1 },
+
+  { "question": "The RUN button is green but I see no events, could the lasers be off?", "expected_doc": "rag_lab/data/No Events green.pdf", "expected_page": 2 },
+  { "question": "No events showing and I think there is a clog, how do I clear it?", "expected_doc": "rag_lab/data/No Events green.pdf", "expected_page": 3 },
+
+  { "question": "The RUN button is yellow and no events, what should I check on my tube first?", "expected_doc": "rag_lab/data/No Events yellow.pdf", "expected_page": 1 },
+  { "question": "RUN is yellow with no events, how do I tell if the sheath tank is empty?", "expected_doc": "rag_lab/data/No Events yellow.pdf", "expected_page": 2 },
+
+  { "question": "What is the Windows username and password to log in after restarting the analyzer?", "expected_doc": "rag_lab/data/Restart SOP.pdf", "expected_page": 1 },
+  { "question": "After the analyzer restart, how do I start the UV 355nm laser manually?", "expected_doc": "rag_lab/data/Restart SOP.pdf", "expected_page": 2 },
+
+  { "question": "During the Friday S6 shutdown, how do I install the closed loop nozzle?", "expected_doc": "rag_lab/data/S6 Friday shutdown.pdf", "expected_page": 2 },
+  { "question": "For the Friday shutdown, how do I move the lines over to the ethanol tank?", "expected_doc": "rag_lab/data/S6 Friday shutdown.pdf", "expected_page": 4 },
+
+  { "question": "How do I restart the S6 sorter?", "expected_doc": "rag_lab/data/S6 Sorter restart.pdf", "expected_page": 1 },
+  { "question": "After restarting the S6 the laser power box shows 0, what does that mean?", "expected_doc": "rag_lab/data/S6 Sorter restart.pdf", "expected_page": 2 },
+
+  { "question": "On the S6 shutdown, what detergent do I leave in the flow cell overnight?", "expected_doc": "rag_lab/data/S6 shutdown.pdf", "expected_page": 3 },
+
+  { "question": "How do I switch from the long SIT to the short SIT?", "expected_doc": "rag_lab/data/SIT switch.pdf", "expected_page": 1 },
+  { "question": "Do I need the long or short SIT to run the HTS plate reader?", "expected_doc": "rag_lab/data/SIT switch.pdf", "expected_page": 3 },
+
+  { "question": "How do I add a parameter back if the fluorochrome isn't in the default list?", "expected_doc": "rag_lab/data/Set up experiment.pdf", "expected_page": 3 },
+  { "question": "How do I set the number of events to record on the Acquisition Dashboard?", "expected_doc": "rag_lab/data/Set up experiment.pdf", "expected_page": 6 },
+  { "question": "How do I adjust the FSC and SSC voltages when not running compensation?", "expected_doc": "rag_lab/data/Set up experiment.pdf", "expected_page": 7 },
+
+  { "question": "How do I shut down the analyzer when I was running sample tubes?", "expected_doc": "rag_lab/data/Shut down analyzer.pdf", "expected_page": 1 },
+
+  { "question": "My event rate dropped a lot on the sorter, how do I clear a sample line clog?", "expected_doc": "rag_lab/data/Sorter sample line unclogging.pdf", "expected_page": 1 },
+
+  { "question": "I'm more than 15 minutes late and got a No Show, how do I make a walk-up session?", "expected_doc": "rag_lab/data/Walk up session in iLab.pdf", "expected_page": 1 },
+  { "question": "On the walk-up session, where do I enter my project number for payment?", "expected_doc": "rag_lab/data/Walk up session in iLab.pdf", "expected_page": 3 },
+
+  { "question": "DIVA is asking what setting to use, which one do I pick for an analyzer?", "expected_doc": "rag_lab/data/What setting to use.pdf", "expected_page": 1 }
+]

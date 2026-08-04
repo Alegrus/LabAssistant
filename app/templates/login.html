@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Sign In — Lab Assistant{% endblock %}
+{% block content %}
+<div class="flex flex-col items-center justify-center min-h-[80vh]">
+  <div class="w-full max-w-sm">
+    <h1 class="text-2xl font-bold text-center mb-8">Lab Assistant</h1>
+
+    {% if error %}
+    <div class="mb-4 px-4 py-3 rounded bg-red-100 text-red-800 text-sm">
+      Incorrect password. Please try again.
+    </div>
+    {% endif %}
+
+    <form method="post" action="/login" class="bg-white shadow rounded-lg px-8 py-6 space-y-4">
+      <div>
+        <label for="name" class="block text-sm font-medium text-gray-700 mb-1">
+          Your name <span class="text-gray-400 font-normal">(for the lab log)</span>
+        </label>
+        <input
+          id="name" name="name" type="text"
+          placeholder="e.g. Alex"
+          class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+      </div>
+      <div>
+        <label for="password" class="block text-sm font-medium text-gray-700 mb-1">
+          Password
+        </label>
+        <input
+          id="password" name="password" type="password" required
+          class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+      </div>
+      <button
+        type="submit"
+        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded text-sm transition-colors"
+      >
+        Enter
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}
