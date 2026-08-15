@@ -102,6 +102,9 @@ class Settings(BaseSettings):
     # Uploads
     max_upload_mb: int = 100  # hard ceiling per file (streamed to disk, then ingested synchronously)
     max_image_mb: int = 25    # hard ceiling for a chat photo (Phase 4 vision)
+    # Long-edge cap for photos sent to the vision model. Phone cameras produce ~12 MP
+    # images; downscaling cuts upload + prefill time with no loss of on-screen legibility.
+    vision_max_image_px: int = 1536
     max_batch_mb: int = 500   # hard ceiling for one multi-file upload (disk + request-time guard)
     upload_warn_mb: int = 15  # soft "large file, may be slow" warning + per-file confirm threshold
     upload_retention_days: int = 0  # 0 = keep until an admin deletes (N3)
