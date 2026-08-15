@@ -153,6 +153,8 @@ failing and why.
 | --- | --- |
 | DB/Ollama connection refused or times out | Not on the LAN and not on the tailnet. See [Working away from the home network](#working-away-from-the-home-network). |
 | Tailnet hostname won't resolve | Tailscale isn't running or isn't signed in **on this machine**; check `tailscale status`. |
+| Hostname resolves but the port is refused, or Ollama returns a `308 redirect` | The `:55432` / `:11434` port was dropped when swapping the hostname into `.env`, so the URL fell back to 5432 / port 80. Both ports are required. |
+| `No such file or directory` running `.venv/bin/uvicorn` or `pytest` | The project directory was moved; console-script shebangs still point at the old path. Recreate the venv, or rewrite line 1 of the scripts in `.venv/bin/`. (`.venv/bin/python -m uvicorn …` works regardless.) |
 | First query takes ~15–20 s | The mini cold-loads the model into memory. Subsequent queries are much faster; it stays warm for a few minutes. |
 | ~9 s before the answer starts | Prompt prefill on local hardware. The status line ("Searching the manuals…") shows progress. Lower `RETRIEVAL_TOP_K` to trade completeness for speed. |
 | "temporarily unavailable" banner | The model errored or timed out. The question is preserved — press Send again. The reason is logged in **Admin → Access Log**. |
