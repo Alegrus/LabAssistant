@@ -7,7 +7,6 @@ itsdangerous
 
 # Database
 sqlalchemy
-alembic
 psycopg[binary]
 pgvector
 
