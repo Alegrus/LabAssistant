@@ -95,6 +95,14 @@ class Settings(BaseSettings):
     # environments where the models aren't needed.
     warm_models_on_startup: bool = True
 
+    # Also preload the remote chat/vision models on a local Ollama at startup, so the
+    # first question (and the first photo) don't pay a cold load of 15-20s.
+    warm_llm_on_startup: bool = True
+    # How long Ollama keeps a model resident after use. Ollama's own default is 5m, so
+    # an idle lab would cold-load again between questions. "-1" pins it forever — only
+    # sensible on a dedicated box, since a large context window can cost tens of GB.
+    llm_keep_alive: str = "2h"
+
     # --- RAG ---
     rag_max_context_tokens: int = 4000
     rag_not_found_message: str = "I couldn't find that in the available manuals."
