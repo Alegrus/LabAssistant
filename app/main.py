@@ -32,15 +32,30 @@ async def on_http_exception(request: Request, exc: StarletteHTTPException):
 def _warm_models() -> None:
     """Preload the RAG models so the first query is fast. Runs in a background thread;
     a failure just leaves them to lazy-load on first use (non-fatal)."""
-    from app.services import embeddings, reranker
+    from app.services import embeddings, llm, reranker
 
     for name, fn in (("embeddings", embeddings.warmup), ("reranker", reranker.warmup)):
         started = time.monotonic()
         try:
             fn()
-            print(f"[warmup] {name} ready in {time.monotonic() - started:.1f}s")
+            print(f"[warmup] {name} ready in {time.monotonic() - started:.1f}s", flush=True)
         except Exception as exc:  # noqa: BLE001 - warmup must never crash boot
-            print(f"[warmup] {name} failed, will lazy-load on first use: {exc}")
+            print(f"[warmup] {name} failed, will lazy-load on first use: {exc}", flush=True)
+
+    # Remote chat/vision models: without this the first question, and separately the
+    # first photo, each pay a 15-20s cold load on the inference host.
+    if settings.warm_llm_on_startup:
+        started = time.monotonic()
+        for model, ok, detail in llm.warm_models():
+            if ok:
+                print(
+                    f"[warmup] llm '{model}' resident in {time.monotonic() - started:.1f}s "
+                    f"(keep_alive={settings.llm_keep_alive})",
+                    flush=True,
+                )
+            else:
+                print(f"[warmup] llm '{model}' failed, will load on first use: {detail}", flush=True)
+            started = time.monotonic()
 
 
 @app.on_event("startup")
@@ -53,7 +68,7 @@ def _startup() -> None:
         db = SessionLocal()
         try:
             if ensure_app_settings(db):
-                print("[startup] seeded default user/admin passwords (dev).")
+                print("[startup] seeded default user/admin passwords (dev).", flush=True)
         finally:
             db.close()
 

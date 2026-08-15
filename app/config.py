@@ -95,6 +95,14 @@ class Settings(BaseSettings):
     # environments where the models aren't needed.
     warm_models_on_startup: bool = True
 
+    # Also preload the remote chat/vision models on a local Ollama at startup, so the
+    # first question (and the first photo) don't pay a cold load of 15-20s.
+    warm_llm_on_startup: bool = True
+    # How long Ollama keeps a model resident after use. Ollama's own default is 5m, so
+    # an idle lab would cold-load again between questions. "-1" pins it forever — only
+    # sensible on a dedicated box, since a large context window can cost tens of GB.
+    llm_keep_alive: str = "2h"
+
     # --- RAG ---
     rag_max_context_tokens: int = 4000
     rag_not_found_message: str = "I couldn't find that in the available manuals."
@@ -102,6 +110,9 @@ class Settings(BaseSettings):
     # Uploads
     max_upload_mb: int = 100  # hard ceiling per file (streamed to disk, then ingested synchronously)
     max_image_mb: int = 25    # hard ceiling for a chat photo (Phase 4 vision)
+    # Long-edge cap for photos sent to the vision model. Phone cameras produce ~12 MP
+    # images; downscaling cuts upload + prefill time with no loss of on-screen legibility.
+    vision_max_image_px: int = 1536
     max_batch_mb: int = 500   # hard ceiling for one multi-file upload (disk + request-time guard)
     upload_warn_mb: int = 15  # soft "large file, may be slow" warning + per-file confirm threshold
     upload_retention_days: int = 0  # 0 = keep until an admin deletes (N3)

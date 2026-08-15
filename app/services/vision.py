@@ -13,11 +13,25 @@ Everything goes through the provider-agnostic `llm` client, so the underlying mo
 OpenRouter or a local server (Ollama/LM Studio/MLX) with no change here.
 """
 import base64
+import io
 import mimetypes
 from pathlib import Path
 
+from PIL import Image, ImageOps
+
 from app.config import settings
 from app.services import llm
+
+try:  # iPhones shoot HEIC by default; this teaches Pillow to read it.
+    import pillow_heif
+
+    pillow_heif.register_heif_opener()
+except ImportError:  # pragma: no cover - HEIC uploads simply fail without it
+    pass
+
+# Formats the inference server accepts directly. Anything else (notably HEIC) is
+# transcoded to JPEG first, otherwise the request is rejected outright.
+_WEB_SAFE_MIME = {"image/jpeg", "image/png", "image/webp", "image/gif"}
 
 VISION_SYSTEM_PROMPT = (
     "You are a machine-vision assistant for a lab. You are shown a photo of a machine or "
@@ -32,10 +46,37 @@ VISION_SYSTEM_PROMPT = (
 
 
 def _data_url(image_path: str) -> str:
-    """Read an image file and return a base64 data URL for the chat-completions API."""
+    """Read an image file and return a base64 data URL for the chat-completions API.
+
+    Phone photos need three fixes before a vision model can use them:
+      * HEIC (the iPhone default) is rejected by the inference server -> transcode to JPEG.
+      * Portrait shots are often stored rotated with an EXIF orientation flag -> apply it,
+        or the model reads the screen sideways.
+      * A 12 MP photo is megabytes of base64 and slow to prefill for no accuracy gain ->
+        downscale to `vision_max_image_px` on the long edge.
+    """
     mime = mimetypes.guess_type(image_path)[0] or "image/jpeg"
-    data = base64.b64encode(Path(image_path).read_bytes()).decode("ascii")
-    return f"data:{mime};base64,{data}"
+    raw = Path(image_path).read_bytes()
+
+    try:
+        with Image.open(io.BytesIO(raw)) as im:
+            im = ImageOps.exif_transpose(im)  # honour the camera's rotation flag
+            oversized = max(im.size) > settings.vision_max_image_px
+            if mime in _WEB_SAFE_MIME and not oversized:
+                pass  # already usable; send the original bytes untouched
+            else:
+                if oversized:
+                    im.thumbnail(
+                        (settings.vision_max_image_px, settings.vision_max_image_px),
+                        Image.LANCZOS,
+                    )
+                buf = io.BytesIO()
+                im.convert("RGB").save(buf, format="JPEG", quality=88)
+                raw, mime = buf.getvalue(), "image/jpeg"
+    except Exception:  # noqa: BLE001 - unreadable image: send as-is and let the API judge
+        pass
+
+    return f"data:{mime};base64,{base64.b64encode(raw).decode('ascii')}"
 
 
 def extract_observations(image_path: str, question: str) -> str:
