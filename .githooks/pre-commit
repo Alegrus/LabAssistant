@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+#
+# Blocks commits that would leak secrets, private infrastructure details, or lab
+# documents into a public repository.
+#
+# Enable once per clone:   git config core.hooksPath .githooks
+# Bypass deliberately:     git commit --no-verify
+#
+# Only staged changes are scanned, and only added lines — rewriting history to remove
+# something is far more painful than being stopped here.
+
+set -uo pipefail
+
+fail=0
+staged=$(git diff --cached --name-only --diff-filter=ACM)
+[ -z "$staged" ] && exit 0
+
+# Added lines only (leading '+'), minus the +++ file headers.
+added=$(git diff --cached -U0 | grep '^+' | grep -v '^+++' || true)
+
+report() {
+  printf '\n  ✗ %s\n' "$1"
+  printf '%s\n' "$2" | sed 's/^/      /' | head -5
+  fail=1
+}
+
+check() {  # check <description> <extended-regex>
+  local hits
+  hits=$(printf '%s\n' "$added" | grep -inE "$2" | head -5 || true)
+  [ -n "$hits" ] && report "$1" "$hits"
+}
+
+# --- Secrets -----------------------------------------------------------------
+check "Possible API key" \
+  'sk-or-v1-[a-zA-Z0-9]{16,}|sk-ant-[a-zA-Z0-9-]{16,}|AKIA[0-9A-Z]{16}|ghp_[a-zA-Z0-9]{20,}'
+check "Possible hard-coded password or token assignment" \
+  '(password|passwd|secret|api_?key|token)[[:space:]]*[:=][[:space:]]*["'"'"'][^"'"'"'<{$][^"'"'"']{7,}'
+
+# --- Private infrastructure --------------------------------------------------
+# 10.x and 192.0.2.x/example ranges are intentionally allowed as documentation
+# placeholders; real home/LAN and Tailscale addresses are not.
+check "Private LAN address (use a placeholder such as 10.0.0.10)" \
+  '\b192\.168\.[0-9]{1,3}\.[0-9]{1,3}\b'
+check "Tailscale/CGNAT address (use a placeholder)" \
+  '\b100\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])\.[0-9]{1,3}\.[0-9]{1,3}\b'
+check "Tailnet hostname (use model-host.internal or similar)" \
+  '[a-z0-9-]+\.tail[a-z0-9]+\.ts\.net'
+# grep -E has no lookaheads, so match any ssh target then drop the safe placeholders.
+ssh_hits=$(printf '%s\n' "$added" \
+  | grep -inE 'ssh[[:space:]]+[a-z_][a-z0-9_-]*@[a-z0-9.]' \
+  | grep -vE 'ssh[[:space:]]+(user|username|<)' | head -5 || true)
+[ -n "$ssh_hits" ] && report "Real-looking ssh target (use 'ssh user@<host>')" "$ssh_hits"
+
+# --- Personal identifiers ----------------------------------------------------
+check "Personal email address (prefer the GitHub noreply address)" \
+  '[a-zA-Z0-9._%+-]+@(gmail|outlook|hotmail|yahoo|icloud|proton(mail)?)\.[a-z]{2,}'
+
+# --- Lab documents / user uploads --------------------------------------------
+docs=$(printf '%s\n' "$staged" \
+  | grep -E '^(storage/(documents|uploads)/|rag_lab/data/)' \
+  | grep -v '\.gitkeep$' || true)
+[ -n "$docs" ] && report "Lab document or user upload staged (these must never be committed)" "$docs"
+
+binaries=$(printf '%s\n' "$staged" | grep -iE '\.(pdf|heic|docx)$' || true)
+[ -n "$binaries" ] && report "Document file staged" "$binaries"
+
+if [ "$fail" -ne 0 ]; then
+  cat <<'EOF'
+
+  Commit blocked by .githooks/pre-commit — this repository is public.
+
+  Replace the value with a placeholder, or if it is genuinely safe:
+      git commit --no-verify
+
+EOF
+  exit 1
+fi
+exit 0

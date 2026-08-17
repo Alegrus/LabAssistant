@@ -217,6 +217,17 @@ Uploaded manuals and user-submitted photos are **not** part of this repository â
 storage directories are gitignored and ship empty. With a self-hosted model endpoint, no
 document text or image ever leaves your network.
 
+A pre-commit hook guards this. Enable it once per clone:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+It scans staged changes and refuses commits containing API keys or hard-coded
+credentials, private LAN/Tailscale addresses or tailnet hostnames, personal email
+addresses, or any lab document or user upload. Deliberate exceptions:
+`git commit --no-verify`.
+
 ## License
 
 [MIT](LICENSE)
