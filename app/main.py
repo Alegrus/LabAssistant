@@ -15,6 +15,9 @@ from app.core.limiter import limiter
 from app.core.seed import ensure_app_settings
 from app.database import SessionLocal, init_db
 
+# The shipped placeholder; anything else counts as configured.
+_DEFAULT_SECRET_KEY = "change-me"
+
 app = FastAPI(title="Lab Machine Assistant")
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
@@ -60,6 +63,16 @@ def _warm_models() -> None:
 
 @app.on_event("startup")
 def _startup() -> None:
+    # SECRET_KEY signs the session cookies that carry the authenticated role. Shipping
+    # the public default would let anyone mint an admin session, so refuse to start
+    # outside development rather than run silently forgeable.
+    if settings.app_env != "development" and settings.secret_key == _DEFAULT_SECRET_KEY:
+        raise RuntimeError(
+            f"SECRET_KEY is still the default value in APP_ENV={settings.app_env!r}. "
+            "Session cookies would be forgeable. Set SECRET_KEY to a long random string "
+            "(e.g. `python -c 'import secrets; print(secrets.token_urlsafe(48))'`)."
+        )
+
     init_db()
     # Dev convenience: auto-seed the default passwords so a fresh DB is usable
     # immediately. In non-dev environments seeding stays an explicit, human step

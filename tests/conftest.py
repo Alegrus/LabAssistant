@@ -40,16 +40,26 @@ _test_db = (_base_url.database or "labassistant") + "_test"
 _test_url = _base_url.set(database=_test_db)
 
 # Create the test database if it's missing (must connect to a different DB to do so).
-_admin = create_engine(
-    _base_url.set(database="postgres"), isolation_level="AUTOCOMMIT", future=True
-)
-with _admin.connect() as conn:
-    exists = conn.execute(
-        text("SELECT 1 FROM pg_database WHERE datname = :n"), {"n": _test_db}
-    ).scalar()
-    if not exists:
-        conn.execute(text(f'CREATE DATABASE "{_test_db}"'))
-_admin.dispose()
+# Best-effort: without a reachable Postgres this must not explode during collection, or
+# a fresh clone can't run even the tests that need no database. Those that do need one
+# skip themselves via their own reachability check.
+try:
+    _admin = create_engine(
+        _base_url.set(database="postgres"),
+        isolation_level="AUTOCOMMIT",
+        future=True,
+        connect_args={"connect_timeout": 5},
+    )
+    with _admin.connect() as conn:
+        exists = conn.execute(
+            text("SELECT 1 FROM pg_database WHERE datname = :n"), {"n": _test_db}
+        ).scalar()
+        if not exists:
+            conn.execute(text(f'CREATE DATABASE "{_test_db}"'))
+    _admin.dispose()
+except Exception as exc:  # noqa: BLE001 - any connection failure is non-fatal here
+    print(f"[conftest] no reachable database ({type(exc).__name__}); "
+          f"database-backed tests will skip.")
 
 # Point the whole app at the test DB BEFORE app.config is ever imported.
 os.environ["DATABASE_URL"] = _test_url.render_as_string(hide_password=False)
