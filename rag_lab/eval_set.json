@@ -39,7 +39,7 @@
   { "question": "The RUN button is yellow and no events, what should I check on my tube first?", "expected_doc": "rag_lab/data/No Events yellow.pdf", "expected_page": 1 },
   { "question": "RUN is yellow with no events, how do I tell if the sheath tank is empty?", "expected_doc": "rag_lab/data/No Events yellow.pdf", "expected_page": 2 },
 
-  { "question": "What is the Windows username and password to log in after restarting the analyzer?", "expected_doc": "rag_lab/data/Restart SOP.pdf", "expected_page": 1 },
+  { "question": "What are the Windows log-in steps after restarting the analyzer?", "expected_doc": "rag_lab/data/Restart SOP.pdf", "expected_page": 1 },
   { "question": "After the analyzer restart, how do I start the UV 355nm laser manually?", "expected_doc": "rag_lab/data/Restart SOP.pdf", "expected_page": 2 },
 
   { "question": "During the Friday S6 shutdown, how do I install the closed loop nozzle?", "expected_doc": "rag_lab/data/S6 Friday shutdown.pdf", "expected_page": 2 },
